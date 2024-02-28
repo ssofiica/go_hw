@@ -82,18 +82,14 @@ func Calc(input io.Reader) (string, error) {
 	for _, element := range expression {
 		if element == "*" || element == "-" || element == "/" || element == "+" || element == ")" || element == " " {
 			var err interface{} = 0
-			if operands.Top() == nil {
+			if operands.Top() == nil && element != ")" {
 				operands.Push(element)
 				continue
 			}
 			for operandTypes[operands.Top().(string)] >= operandTypes[element] {
 				if operands.Top() == "(" && element == ")" {
 					operands.Pop()
-					if operands.Top() == nil {
-						break
-					} else {
-						continue
-					}
+					break
 				} else if operands.Top() == "(" && element != ")" {
 					break
 				}
@@ -107,7 +103,9 @@ func Calc(input io.Reader) (string, error) {
 					break
 				}
 			}
-			operands.Push(element)
+			if element != ")" {
+				operands.Push(element)
+			}
 		} else if element == "(" {
 			operands.Push(element)
 		} else {
