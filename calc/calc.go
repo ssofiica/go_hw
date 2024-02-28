@@ -81,8 +81,8 @@ func Calc(input io.Reader) (string, error) {
 
 	for _, element := range expression {
 		if element == "*" || element == "-" || element == "/" || element == "+" || element == ")" || element == " " {
-			var err interface{} = 0
-			if operands.Top() == nil && element != ")" {
+			//var err interface{} = 0
+			if operands.IsEmpty() && element != ")" {
 				operands.Push(element)
 				continue
 			}
@@ -98,8 +98,7 @@ func Calc(input io.Reader) (string, error) {
 				number := calcResult(operands.Top().(string), firstNumber, secondNumber)
 				numbers.Push(strconv.Itoa(number))
 				operands.Pop()
-				err = operands.Top()
-				if err == nil {
+				if operands.IsEmpty() {
 					break
 				}
 			}
