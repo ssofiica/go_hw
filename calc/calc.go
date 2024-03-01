@@ -2,8 +2,6 @@ package calc
 
 import (
 	"fmt"
-	"io"
-	"regexp"
 	"strconv"
 )
 
@@ -41,7 +39,7 @@ func (stack *Stack) Top() interface{} {
 	return stack.elements[stack.size-1]
 }
 
-func calcResult(operation string, first int, second int) int {
+func calcResult(operation string, first float64, second float64) float64 {
 	if operation == "+" {
 		return first + second
 	}
@@ -52,13 +50,15 @@ func calcResult(operation string, first int, second int) int {
 		return first * second
 	}
 	if operation == "/" {
-		return first / second
+		if second != 0 {
+			return first / second
+		}
+		panic("Делить на ноль нельзя")
 	}
 	return 0
 }
 
-func Calc(input io.Reader) (string, error) {
-	var inputExpression string
+func Calc(expression []string) (string, error) {
 	operandTypes := map[string]int{
 		" ": 1,
 		")": 0,
@@ -68,20 +68,14 @@ func Calc(input io.Reader) (string, error) {
 		"/": 3,
 		"(": 4,
 	}
-	_, err := fmt.Fscan(input, &inputExpression)
-	if err != nil {
-		return "0", nil
-	}
-	re := regexp.MustCompile("\\d*\\.?\\d+|\\*|\\/|\\)|\\(|\\+|\\-")
-	expression := re.FindAllString(inputExpression, -1)
 	expression = append(expression, " ")
 
 	numbers := &Stack{elements: make([]interface{}, 0), size: 0}
 	operands := &Stack{elements: make([]interface{}, 0), size: 0}
 
 	for _, element := range expression {
+		// обрабатываем арифм. знаки, )
 		if element == "*" || element == "-" || element == "/" || element == "+" || element == ")" || element == " " {
-			//var err interface{} = 0
 			if operands.IsEmpty() && element != ")" {
 				operands.Push(element)
 				continue
@@ -93,10 +87,11 @@ func Calc(input io.Reader) (string, error) {
 				} else if operands.Top() == "(" && element != ")" {
 					break
 				}
-				secondNumber, _ := strconv.Atoi(numbers.Pop().(string))
-				firstNumber, _ := strconv.Atoi(numbers.Pop().(string))
+				secondNumber, _ := strconv.ParseFloat(numbers.Pop().(string), 64)
+				firstNumber, _ := strconv.ParseFloat(numbers.Pop().(string), 64)
 				number := calcResult(operands.Top().(string), firstNumber, secondNumber)
-				numbers.Push(strconv.Itoa(number))
+				stringNumber := fmt.Sprintf("%v", number)
+				numbers.Push(stringNumber)
 				operands.Pop()
 				if operands.IsEmpty() {
 					break
