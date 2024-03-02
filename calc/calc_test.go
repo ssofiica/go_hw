@@ -59,7 +59,9 @@ func TestCalc(t *testing.T) {
 			require.Equal(t, result, item.expected, "Failed")
 		}
 	}
+}
 
+func TestWrongValidate(t *testing.T) {
 	var wrongValidate = []string{
 		"",
 		"+",
