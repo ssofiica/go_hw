@@ -2,20 +2,19 @@ package calc
 
 import (
 	"github.com/stretchr/testify/require"
-	"strings"
 	"testing"
 )
 
 func TestCalc(t *testing.T) {
 	var cases = []struct {
-		expected string
 		input    string
+		expected string
 	}{
 		{
-			input: "5/(6-2)/2+100*2", expected: "200.625",
+			input: "5  /(6-  2)   /2+100*2", expected: "200.625",
 		},
 		{
-			input: "5.25*4-10*(1+1.5)", expected: "-4",
+			input: "5.  25*4-10*(1+1.5)", expected: "-4",
 		},
 		{
 			input: "((((-1)+2)+3+4))", expected: "8",
@@ -53,12 +52,29 @@ func TestCalc(t *testing.T) {
 	}
 
 	for _, item := range cases {
-		expression, err := Validate(strings.NewReader(item.input))
-		if expression == nil {
-			t.Errorf("%s in %s", err, item.input)
-			return
+		expression, err := Validate(item.input)
+		require.Equal(t, err, nil, "unexpected error")
+		result, err := Calc(expression)
+		if err == nil {
+			require.Equal(t, result, item.expected, "Failed")
 		}
-		result, _ := Calc(expression)
-		require.Equal(t, result, item.expected, "Failed")
+	}
+
+	var wrongValidate = []string{
+		"",
+		"+",
+		"23++11",
+		"(525*4-10*(1+1.5)",
+		"(-1)(+2)+3+4",
+		"*1-2",
+		"()+2+3+4",
+		"11+-9",
+		"1+.25",
+		"(4/9asd)",
+	}
+
+	for _, item := range wrongValidate {
+		_, err := Validate(item)
+		require.NotEqual(t, err, nil, "unexpected error")
 	}
 }

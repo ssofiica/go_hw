@@ -1,6 +1,7 @@
 package calc
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -39,23 +40,23 @@ func (stack *Stack) Top() interface{} {
 	return stack.elements[stack.size-1]
 }
 
-func calcResult(operation string, first float64, second float64) float64 {
+func calcResult(operation string, first float64, second float64) (float64, error) {
 	if operation == "+" {
-		return first + second
+		return first + second, nil
 	}
 	if operation == "-" {
-		return first - second
+		return first - second, nil
 	}
 	if operation == "*" {
-		return first * second
+		return first * second, nil
 	}
 	if operation == "/" {
 		if second != 0 {
-			return first / second
+			return first / second, nil
 		}
-		panic("Делить на ноль нельзя")
+		return 0, errors.New("0 can't be second argument in division")
 	}
-	return 0
+	return 0, nil
 }
 
 func Calc(expression []string) (string, error) {
@@ -66,7 +67,7 @@ func Calc(expression []string) (string, error) {
 		"-": 2,
 		"*": 3,
 		"/": 3,
-		"(": 4,
+		"(": 0,
 	}
 	expression = append(expression, " ")
 
@@ -84,12 +85,13 @@ func Calc(expression []string) (string, error) {
 				if operands.Top() == "(" && element == ")" {
 					operands.Pop()
 					break
-				} else if operands.Top() == "(" && element != ")" {
-					break
 				}
 				secondNumber, _ := strconv.ParseFloat(numbers.Pop().(string), 64)
 				firstNumber, _ := strconv.ParseFloat(numbers.Pop().(string), 64)
-				number := calcResult(operands.Top().(string), firstNumber, secondNumber)
+				number, err := calcResult(operands.Top().(string), firstNumber, secondNumber)
+				if err != nil {
+					return "0", err
+				}
 				stringNumber := fmt.Sprintf("%v", number)
 				numbers.Push(stringNumber)
 				operands.Pop()
